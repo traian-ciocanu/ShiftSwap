@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>ShiftSwap</title>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+            body{
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                background: #eaf1fb;
+                color: #1b2735;
+                padding: 32px 24px;
+                max-width: 1100px;
+                margin: 0 auto;
+            }
+
+            /* ---- Header ---- */
+            header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 28px;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+            .logo {
+                font-size: 28px;
+                font-weight: 800;
+                letter-spacing: -0.5px;
+            }
+            .logo .shift { color: #1b2735; }
+            .logo .swap {
+                color: #2f6fed;
+                position: relative;
+            }
+            .logo .swap::after {
+                content: "⇄";
+                font-size: 20px;
+                margin-left: 6px;
+                color: #2f6fed;
+            }
+            .tagline {
+                font-size: 13px;
+                color: #6b7a90;
+                font-weight: 500;
+                margin-top: 2px;
+            }
+
+            /* ---- Manager toggle ---- */
+            .manager-toggle {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: white;
+                padding: 10px 16px;
+                border-radius: 999px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #445e7c;
+                box-shadow: 0 2px 8px rgba(47,111,237,0.08);
+                cursor: pointer;
+            }
+
+            /* ---- Board ---- */
+            #board {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            .card {
+                background: white;
+                border-radius: 18px;
+                padding: 22px;
+                width: 260px;
+                box-shadow: 0 4px 16px rgba(27,39,53,0.06);
+                border: 1px solid #e3ecf7;
+                transition: transform 0.15s ease, box-shadow 0.15s ease;
+            }
+            .card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 24px rgba(47,111,237,0.12);
+            }
+            .card.locked {
+                opacity: 0.55;
+            }
+            .dept {
+                font-size: 11px;
+                color: #2f6fed;
+                text-transform: uppercase;
+                font-weight: 700;
+                letter-spacing: 0.8px;
+            }
+            .card h2 {
+                margin: 6px 0 2px;
+                font-size: 22px;
+                font-weight: 700;
+            }
+            .time {
+                color: #6b7a90;
+                font-size: 14px;
+                font-weight: 500;
+            }
+            .who {
+                font-size: 13px;
+                color: #8a97a8;
+                margin: 10px 0 14px;
+            }
+
+            /* ---- Status pill ---- */
+            .pill {
+                display: inline-block;
+                padding: 5px 12px;
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 700;
+                margin-bottom: 14px;
+            }
+            .pill.open { background: #e4f5ea; color: #1f9d55; }
+            .pill.claimed { background: #fff3d6; color: #b5820a; }
+            .pill.approved { background: #e8ecf2; color: #6b7a90; }
+
+            /* ---- Buttons ---- */
+            .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+            button {
+                padding: 9px 16px;
+                border: none;
+                border-radius: 10px;
+                font-family: inherit;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.15s ease;
+            }
+            .btn-primary { background: #2f6fed; color: white;}
+            .btn-primary:hover { background: #1f5ad6; }
+            .btn-secondary { background: #eef2f8; color: #445e7c; }
+            .btn-secondary:hover { background: #e0e7f1; }
+
+            /* ---- Tabs ---- */
+            .tabs {
+                display: flex;
+                gap: 6px;
+                background: white;
+                padding: 6px;
+                border-radius: 999px;
+                width: fit-content;
+                margin-bottom: 28px;
+                box-shadow: 0 2px 8px rgba(47,111,237,0.08);
+            }
+            .tab {
+                background: transparent;
+                color: #6b7a90;
+                padding: 10px 22px;
+                border-radius: 999px;
+                font-weight: 600;
+                font-size: 14px;
+            }
+            .tab.active {
+                background: #2f6fed;
+                color: white;
+            }
+
+            /* ---- Panles + Animation ---- */
+            .panel {
+                display: none;
+                animation: fadeIn 0.35s ease;
+            }
+            .panel.active {
+                display: block;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+
+            /* ---- "Soon" placeholder ---- */
+            .soon-box {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 320px;
+                font-size: 32px;
+                font-weight: 700;
+                color: #9fb3d1;
+                background: white;
+                border-radius: 18px;
+                box-shadow: 0 4px 16px rgba(27,39,53,0.06);
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div>
+                <div class="logo"><span class="shift">Shift</span><span class="swap">Swap</span></div>
+                <div class="tagline">Swap shifts without the group-chat chaos</div>
+            </div>
+            <label class="manager-toggle">
+                <input type="checkbox" onchange="toggleManager()"> Manager view
+            </label>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" onclick="switchTab ('swap')">ShiftSwap</button>
+            <button class="tab" onclick="switchTab ('schedule')">Schedule</button>
+            <button class="tab" onclick="switchTab ('myshifts')">My Shifts</button>
+        </nav>
+
+        <div id="swap" class="panel active">
+            <div id="board"></div>
+        </div>
+
+        <div id="schedule" class="panel">
+            <div class="soon-box">Soon 😎</div>
+        </div>
+
+        <div id="myshifts" class="panel">
+            <div class="soon-box">Soon 😎</div>
+        </div>
+
+        <script>
+
+            // ========================================================
+            //  THE PORT (data layer)
+            // ========================================================
+
+            let defaultShifts = [
+                { id: "s1", day: "Friday",   time: "8AM-4PM",   dept: "Front Desk",   who: "Maria Crait",    status: "Open",   claimedBy: null},
+                { id: "s2", day: "Saturday", time: "12AM-8AM",  dept: "Housekeeping", who: "Noah Miller",    status: "Open",   claimedBy: null},
+                { id: "s3", day: "Monday",   time: "8AM-4PM",   dept: "Restaurant",   who: "Elijah Clark",   status: "Open",   claimedBy: null},
+                { id: "s4", day: "Sunday",   time: "8AM-4PM",   dept: "Maintenance",  who: "Henry Carter",   status: "Open",   claimedBy: null}
+            ];
+
+            // Bump this number every time you change defaultShifts,
+            // so browsers drop the old saved data and load the new one.
+            const DATA_VERSION = "2";
+
+            function getShifts() {
+                try {
+                    if (localStorage.getItem("dataVersion") !== DATA_VERSION) {
+                        localStorage.removeItem("shifts");
+                        localStorage.setItem("dataVersion", DATA_VERSION);
+                    }
+                    let saved = localStorage.getItem("shifts");
+                    if (saved === null) {return structuredClone(defaultShifts); }
+                    return JSON.parse(saved);
+                } catch (error) {
+                    console.warn("Saved shifts were unreadable, resetting to defaults.", error);
+                    localStorage.removeItem("shifts");
+                    return structuredClone(defaultShifts);
+                }
+            }
+
+
+            function getShiftById(id) {
+                let list = getShifts();
+                return list.find(f => f.id === id)
+
+                // return the one shift whose id matches 
+            }
+
+            function updateShiftsStatus(id, newStatus, newClaimedBy) {
+                let list = getShifts();
+                let shift = list.find(f => f.id === id);
+                shift.status = newStatus;
+                shift.claimedBy = newClaimedBy;
+                saveShifts(list);
+            }
+
+            function saveShifts(list) {
+                localStorage.setItem("shifts", JSON.stringify(list));
+            }
+
+            // ========================================================
+            //  THE APP
+            // ========================================================
+
+            let board = document.getElementById("board");
+            let isManager = false;
+            let currentUser = "Traian"; // placeholder until real login // 
+
+            function switchTab(name) {
+                // hide every panel, show the chosen one
+                let panels = document.querySelectorAll(".panel");
+                for (let i = 0; i < panels.length; i++) {
+                    panels[i].classList.remove("active");
+                }
+                document.getElementById(name).classList.add("active");
+
+                // update which tab button looks active
+                let tabs = document.querySelectorAll(".tab");
+                for (let i = 0; i < tabs.length; i++) {
+                    tabs[i].classList.remove("active");
+                }
+                event.target.classList.add("active");
+            }
+
+            function toggleManager() {
+                isManager = !isManager;
+                render();
+            }
+
+            // Helper: turn a status into a pill class + clean label
+            function statusPill(status) {
+                if (status === "Open") return `<span class="pill open">Open</span>`;
+                if (status === "Claimed ✅") return `<span class="pill claimed">Claimed</span>`;
+                if (status === "Approved 🔒") return `<span class="pill approved">Approved</span>`;
+                return `<span class="pill">${status}</span>`;
+            }
+
+            function render() {
+                board.innerHTML = "";
+                let list = getShifts();
+                for (let shift of list) {
+                    board.innerHTML += `
+                    <div class="card ${shift.status === "Approved 🔒" ? "locked" : ""}"> 
+                        <p class="dept">${shift.dept}</p>
+                        <h2>${shift.day}</h2>
+                        <p class="time">${shift.time}</p>
+                        <p class="who">Posted by ${shift.who}</p>
+                        ${ shift.claimedBy ? `<p class="who">Claimed by ${ shift.claimedBy }</p>` : ""}
+                        ${statusPill(shift.status)}
+                        <div class="actions">
+                            ${shift.status === "Open" ? `<button class="btn-primary" onclick="claimShift('${shift.id}')">Claim</button>` : ""}
+                            ${shift.status === "Claimed ✅" ? `<button class="btn-secondary" onclick="unclaimShift('${shift.id}')">Unclaim</button>` : ""}
+                            ${isManager && shift.status === "Claimed ✅" ? `<button class="btn-primary" onclick="approveShift('${shift.id}')">Approve</button>` : ""}
+                            ${isManager && shift.status === "Approved 🔒" ? `<button class="btn-secondary" onclick="unapproveShift('${shift.id}')">Unapprove</button>` : ""}
+                        </div>
+                    </div>
+                    `;
+                }
+            }
+
+            function claimShift(id) {
+                let shift = getShiftById(id);
+                if (shift.status === "Open") {
+                    updateShiftsStatus(id, "Claimed ✅", currentUser);
+                    render();
+                } else if (shift.status === "Approved 🔒") {
+                    alert("You can't claim an approved shift!");
+                } else {
+                    alert("This shift is already claimed!");
+                }
+            }
+
+            function unclaimShift(id) {
+                let shift = getShiftById(id);
+                if (shift.status === "Claimed ✅") {
+                    updateShiftsStatus(id, "Open", null);
+                    render();
+                } else if (shift.status === "Approved 🔒") {
+                    alert("You can't unclaim an approved shift - ask a Manager to unapprove it first");
+                } else {
+                    alert("This shift isn't claimed yet!");
+                }
+            }
+
+            function approveShift(id) {
+                let shift = getShiftById(id);
+                if (shift.status === "Claimed ✅") {
+                    updateShiftsStatus(id, "Approved 🔒", shift.claimedBy);
+                    render();
+                } else {
+                    alert("Only claimed shift can be approved!");
+                }
+            }
+
+            function unapproveShift(id) {
+                let shift = getShiftById(id);
+                if (shift.status === "Approved 🔒") {
+                    updateShiftsStatus(id, "Open", null);
+                    render();
+                } else {
+                    alert("Only approved shifts can be unapproved!")
+                }
+            }
+
+            render();
+        </script>
+    </body>
+</html>
