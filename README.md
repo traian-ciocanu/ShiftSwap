@@ -2,6 +2,8 @@
 
 **Swap shifts without the group-chat chaos.**
 
+**Live demo:** https://traian-ciocanu.github.io/ShiftSwap/
+
 ShiftSwap is a small web app for teams that work in shifts (for example a hotel). An employee who can't cover a shift posts it, a colleague claims it with one click, and a manager approves the swap before it becomes final.
 
 > Status: early prototype (front end only). Built as a personal project to learn how software is built **and tested**.
